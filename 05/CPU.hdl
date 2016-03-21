@@ -24,7 +24,6 @@
  * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
  * than to the address resulting from executing the current instruction. 
  */
-
 CHIP CPU {
 
     IN  inM[16],         // M value input  (M = contents of RAM[A])
@@ -39,5 +38,35 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+
+    Mux16 (a=instruction, b=ALUOut, sel=instruction[15], out=ARegIn);
+    Not (in=instruction[15], out=IsAInstruction);
+    Or (a=IsAInstruction, b=instruction[5], out=ShouldLoadA);
+    ARegister (in=ARegIn, load=ShouldLoadA, out=OutA);
+
+    And (a=instruction[4], b=IsCInstruction, out=ShouldLoadD);
+    DRegister (in=ALUOut, load=ShouldLoadD, out=OutD);
+    Mux16 (a=OutA, b=inM, sel=instruction[12], out=ALUInAM);
+    ALU (x=OutD, y=ALUInAM,
+         zx=instruction[11], nx=instruction[10],
+         zy=instruction[9], ny=instruction[8],
+         f=instruction[7], no=instruction[6],
+         zr=zr, ng=ng, out=ALUOut);
+    
+    Or16 (a=ALUOut, b=ALUOut, out=outM);
+    And (a=IsCInstruction, b=instruction[3], out=writeM);
+    Or16 (a=OutA, b=OutA, out[0..14]=addressM);
+
+    Or (a=zr, b=ng, out=NonPos);
+    Not (in=NonPos, out=Pos);
+
+    And (a=instruction[0], b=Pos, out=JumpPos);
+    And (a=instruction[1], b=zr, out=JumpZer);
+    And (a=instruction[2], b=ng, out=JumpNeg);
+    Not (in=IsAInstruction, out=IsCInstruction);
+
+    Or8Way (in[0]=JumpPos, in[1]=JumpZer, in[2]=JumpNeg, in[3..7]=false, out=HasJump);
+    And (a=HasJump, b=IsCInstruction, out=ShouldJump);
+
+    PC (in=OutA, load=ShouldJump, inc=true, reset=reset, out[0..14]=pc);
 }
