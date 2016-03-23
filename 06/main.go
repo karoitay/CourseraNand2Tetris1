@@ -20,7 +20,7 @@ func compile(filename string) {
 		panic(err)
 	}
 	defer f.Close()
-	
+
 	outfile := strings.Replace(filename, ".asm", ".hack", -1)
 	of, err := os.Create(outfile)
 	if err != nil {
