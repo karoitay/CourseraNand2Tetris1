@@ -53,16 +53,16 @@ type Instruction interface {
 }
 
 type AInstruction struct {
-	Source   string
+	Source  string
 	Value   string
 	Address int
 }
 
 type CInstruction struct {
-	Source   string
-	Dest string
-	Comp string
-	Jump string
+	Source string
+	Dest   string
+	Comp   string
+	Jump   string
 }
 
 type Label struct {
