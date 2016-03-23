@@ -5,14 +5,6 @@ import (
 	"strings"
 )
 
-type Instruction interface {
-	GetCode() string
-}
-
-type AInstruction struct {
-	Address int
-}
-
 var destinations map[string]string = map[string]string{
 	"":    "000",
 	"M":   "001",
@@ -56,10 +48,25 @@ var jumps map[string]string = map[string]string{
 	"JMP": "111",
 }
 
+type Instruction interface {
+	GetCode() string
+}
+
+type AInstruction struct {
+	Source   string
+	Value   string
+	Address int
+}
+
 type CInstruction struct {
+	Source   string
 	Dest string
 	Comp string
 	Jump string
+}
+
+type Label struct {
+	Name string
 }
 
 func (inst AInstruction) GetCode() string {
@@ -74,4 +81,8 @@ func (inst CInstruction) GetCode() string {
 		code = "1110" + computations[inst.Comp]
 	}
 	return code + destinations[inst.Dest] + jumps[inst.Jump]
+}
+
+func (lbl Label) GetCode() string {
+	return ""
 }

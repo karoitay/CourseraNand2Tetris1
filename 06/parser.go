@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ func NewFileParser(f *os.File) *FileParser {
 	return &FileParser{scanner}
 }
 
-func (fp FileParser) nextLine() Instruction {
+func (fp FileParser) nextInstruction() Instruction {
 	for fp.scanner.Scan() {
 		text := strings.TrimSpace(fp.scanner.Text())
 		commentIndex := strings.Index(text, "//")
@@ -33,16 +32,12 @@ func (fp FileParser) nextLine() Instruction {
 
 func parseInstruction(text string) Instruction {
 	if strings.HasPrefix(text, "@") {
-		if address, err := strconv.Atoi(text[1:]); err != nil {
-			panic(err)
-		} else {
-			return AInstruction{address}
-		}
+		return AInstruction{Source: text, Value: text[1:]}
 	}
 	if strings.HasPrefix(text, "(") {
-		panic("Need to handle labels: " + text)
+		return Label{text[1 : len(text)-1]}
 	}
-	inst := CInstruction{}
+	inst := CInstruction{Source: text}
 	split := strings.Split(text, ";")
 	if len(split) == 2 {
 		inst.Jump = split[1]

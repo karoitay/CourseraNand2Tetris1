@@ -7,10 +7,12 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Printf("Usage: " + os.Args[0] + " <filename>\n")
+	if len(os.Args) == 1 {
+		fmt.Printf("Usage: " + os.Args[0] + " <filename1> [<filename2> ...]\n")
 	} else {
-		compile(os.Args[1])
+		for i := 1; i < len(os.Args); i++ {
+			compile(os.Args[i])
+		}
 	}
 }
 
@@ -21,17 +23,13 @@ func compile(filename string) {
 	}
 	defer f.Close()
 
-	outfile := strings.Replace(filename, ".asm", ".hack", -1)
-	of, err := os.Create(outfile)
-	if err != nil {
+	symbols := NewSymbolTable()
+
+	FirstPass{}.Compile(NewFileParser(f), symbols)
+
+	if _, err := f.Seek(0, 0); err != nil {
 		panic(err)
 	}
-	defer of.Close()
 
-	fp := NewFileParser(f)
-	for inst := fp.nextLine(); inst != nil; inst = fp.nextLine() {
-		if _, err = of.WriteString(inst.GetCode() + "\n"); err != nil {
-			panic(err)
-		}
-	}
+	SecondPass{strings.Replace(filename, ".asm", ".hack", -1)}.Compile(NewFileParser(f), symbols)
 }
